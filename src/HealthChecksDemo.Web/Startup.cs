@@ -1,5 +1,8 @@
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +22,13 @@ namespace HealthChecksDemo.Web
         {
             services.AddHealthChecks()
                 .AddSqlServer(Configuration["ConnectionStrings:DefaultConnection"]);
+
+            // Healthchecks UI
+            services.AddHealthChecksUI(opt =>
+            {
+                opt.AddHealthCheckEndpoint("Demo web", "/health"); // Map health check API
+            })
+            .AddInMemoryStorage();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -32,7 +42,17 @@ namespace HealthChecksDemo.Web
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/health");
+                // Adding endpoints of health check for the health check UI in UI format
+                endpoints.MapHealthChecks("/health", new HealthCheckOptions
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+
+                // Map healthcheck UI endpoint. Default is /healthchecks-ui
+                endpoints.MapHealthChecksUI();
+
+                endpoints.MapGet("/", async context => await context.Response.WriteAsync("Hello World!"));
             });
         }
     }
