@@ -1,4 +1,5 @@
 using HealthChecks.UI.Client;
+using HealthChecksDemo.Web.HealthChecks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -21,7 +22,8 @@ namespace HealthChecksDemo.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHealthChecks()
-                .AddSqlServer(Configuration["ConnectionStrings:DefaultConnection"]);
+                .AddSqlServer(Configuration["ConnectionStrings:DefaultConnection"])
+                .AddCheck<CustomHealthCheck>("Custom health check");
 
             // Healthchecks UI
             services.AddHealthChecksUI(opt =>
